@@ -1,12 +1,31 @@
-import type { IImageData } from "../MockAppData.ts";
+import type { IApiImageData } from "../../../backend/src/common/ApiImageData.ts";
+import { ImageNameEditor } from "./ImageNameEditor.tsx";
 
 interface IImageDetailsProps {
   imageId: string;
-  imageData: IImageData[];
+  imageData: IApiImageData[];
+  isError: boolean;
+  isFetching: boolean;
+  onNameChange: (imageId: string, newName: string) => void;
 }
 
-export function ImageDetails({ imageId, imageData }: IImageDetailsProps) {
+export function ImageDetails({
+  imageId,
+  imageData,
+  isError,
+  isFetching,
+  onNameChange,
+}: IImageDetailsProps) {
+  if (isError) {
+    return <p style={{ color: "red" }}>Failed to fetch images.</p>;
+  }
+
+  if (isFetching) {
+    return <p>Loading image...</p>;
+  }
+
   const image = imageData.find((image) => image.id === imageId);
+
   if (!image) {
     return (
       <div>
@@ -19,6 +38,11 @@ export function ImageDetails({ imageId, imageData }: IImageDetailsProps) {
     <div>
       <h2>{image.name}</h2>
       <p>By {image.author.username}</p>
+      <ImageNameEditor
+        initialValue={image.name}
+        imageId={imageId}
+        onNameChange={onNameChange}
+      />
       <img className="ImageDetails-img" src={image.src} alt={image.name} />
     </div>
   );
