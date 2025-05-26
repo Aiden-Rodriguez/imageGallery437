@@ -8,6 +8,7 @@ import { ImageDetails } from "./images/ImageDetails";
 import { useParams } from "react-router";
 import { fetchDataFromServer } from "../src/MockAppData";
 import type { IImageData } from "../src/MockAppData.ts";
+import { ValidRoutes } from "../../backend/src/shared/ValidRoutes.ts";
 
 function ImageDetailsWrapper({ imageData }: { imageData: IImageData[] }) {
   const { imageId } = useParams();
@@ -21,13 +22,13 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<AllImages imageData={imageData} />} />
-          <Route path="/upload" element={<UploadPage />} />
+          <Route path={ValidRoutes.HOME} element={<AllImages imageData={imageData} />} />
+          <Route path={ValidRoutes.UPLOAD} element={<UploadPage />} />
           <Route
-            path="/images/:imageId"
+            path={ValidRoutes.IMAGES}
             element={<ImageDetailsWrapper imageData={imageData} />}
           />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path={ValidRoutes.LOGIN} element={<LoginPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
