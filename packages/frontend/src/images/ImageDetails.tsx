@@ -24,7 +24,7 @@ export function ImageDetails({
     return <p>Loading image...</p>;
   }
 
-  const image = imageData.find((image) => image.id === imageId);
+  const image = imageData.find((img) => img.id === imageId);
 
   if (!image) {
     return (
