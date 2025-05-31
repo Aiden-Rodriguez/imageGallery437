@@ -1,10 +1,24 @@
-### Get all images
-# This is a comment
+### 1: Get all images
 GET http://localhost:3000/api/images
 
-### A second example.  Each request must be delimited by a triple hash
+### 2: A second example
 POST http://localhost:3000/api/test
-Content-Type: application/json # Content-Type header is a must if you're sending JSON
-# Request body separated from headers by newline
+Content-Type: application/json
 
-{ "a": 1, "b": 2 }
+{
+  "a": 1,
+  "b": 2,
+  "c": 3,
+  "d": 4
+}
+
+### 3: Get images with substring
+GET http://localhost:3000/api/images?substring=Huskies
+
+### 4: Edit image name
+PUT http://localhost:3000/api/images/6838cb0654e089cc6a06b1be
+Content-Type: application/json
+
+{
+  "name": "bruh123"
+}

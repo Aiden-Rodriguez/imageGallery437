@@ -1,9 +1,9 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
-import { ValidRoutes } from "../shared/ValidRoutes";
-import { connectMongo } from "../connectMongo";
-import { ImageProvider } from "../imageProvider";
-import { registerImageRoutes } from "./imageRoutes";
+import { ValidRoutes } from "./shared/ValidRoutes";
+import { connectMongo } from "./connectMongo";
+import { ImageProvider } from "./imageProvider";
+import { registerImageRoutes } from "./routes/imageRoutes";
 
 dotenv.config();
 
@@ -17,6 +17,7 @@ async function startServer() {
   const imageProvider = new ImageProvider(mongoClient);
 
   const app = express();
+  app.use(express.json());
   app.use(express.static(STATIC_DIR));
 
   registerImageRoutes(app, imageProvider);

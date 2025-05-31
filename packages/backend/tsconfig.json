@@ -3,6 +3,7 @@
     "target": "es2023",
     "module": "NodeNext",
     "baseUrl": "./src",
+    "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,

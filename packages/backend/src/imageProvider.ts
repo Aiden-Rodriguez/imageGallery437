@@ -4,17 +4,17 @@ interface IImageDocument {
   _id: ObjectId;
   src: string;
   name: string;
-  authorId: string; // String matching users._id
+  authorId: string;
 }
 
 interface IUserDocument {
-  id: string; // frontend wants 'id', not '_id'
+  id: string;
   username: string;
   email: string;
 }
 
 interface IDenormalizedImage {
-  id: string; // frontend wants 'id', not '_id'
+  id: string;
   src: string;
   name: string;
   author: IUserDocument;
@@ -34,35 +34,72 @@ export class ImageProvider {
       .collection<IImageDocument>(collectionName);
   }
 
-  async getAllImages(): Promise<IDenormalizedImage[]> {
-    const imagesWithAuthor = await this.collection
-      .aggregate([
-        {
-          $lookup: {
-            from: "users",
-            localField: "authorId",
-            foreignField: "_id",
-            as: "author"
-          }
-        },
-        { $unwind: "$author" },
-        {
-          $project: {
-            _id: 0,
-            id: { $toString: "$_id" },
-            src: 1,
-            name: 1,
-            author: {
-              id: "$author._id",
-              username: "$author.username",
-              email: "$author.email"
-            }
-          }
-        }
-        
-      ])
-      .toArray();
+  async updateImageName(imageId: string, newName: string): Promise<number> {
+    const result = await this.collection.updateOne(
+      { _id: new ObjectId(imageId) },
+      { $set: { name: newName } }
+    );
+    return result.matchedCount;
+  }
 
-    return imagesWithAuthor as IDenormalizedImage[];
+  async getImages(nameFilter?: string): Promise<IDenormalizedImage[]> {
+    const trimmed = nameFilter?.trim();
+    const escapedFilter = trimmed
+      ? trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      : null;
+
+    const pipeline: object[] = [];
+
+    // Add name filter if provided
+    if (escapedFilter) {
+      pipeline.push({
+        $match: {
+          name: {
+            $regex: escapedFilter,
+            $options: "i", // case-insensitive
+          },
+        },
+      });
+    }
+
+    pipeline.push(
+      {
+        $lookup: {
+          from: "users",
+          let: { authorIdStr: "$authorId" },
+          pipeline: [
+            {
+              $addFields: {
+                idStr: { $toString: "$_id" },
+              },
+            },
+            {
+              $match: {
+                $expr: { $eq: ["$idStr", "$$authorIdStr"] },
+              },
+            },
+          ],
+          as: "author",
+        },
+      },
+      { $unwind: "$author" },
+      {
+        $project: {
+          _id: 0,
+          id: { $toString: "$_id" },
+          src: 1,
+          name: 1,
+          author: {
+            id: { $toString: "$author._id" },
+            username: "$author.username",
+            email: "$author.email",
+          },
+        },
+      }
+    );
+
+    
+    const results = await this.collection.aggregate(pipeline).toArray();
+    return results as IDenormalizedImage[];
   }
 }
