@@ -1,6 +1,6 @@
 ### 1: Get all images
 GET http://localhost:3000/api/images
-
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5ld3VzZXIiLCJpYXQiOjE3NDg4MzAzNTQsImV4cCI6MTc0ODkxNjc1NH0.M1Roj53Z06aDmnfJzP6eWyOwUe7ojUN6Tj-2UKrr3oc
 ### 2: A second example
 POST http://localhost:3000/api/test
 Content-Type: application/json
@@ -17,8 +17,62 @@ GET http://localhost:3000/api/images?substring=Huskies
 
 ### 4: Edit image name
 PUT http://localhost:3000/api/images/6838cb0654e089cc6a06b1be
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5ld3VzZXIiLCJpYXQiOjE3NDg4MzAzNTQsImV4cCI6MTc0ODkxNjc1NH0.M1Roj53Z06aDmnfJzP6eWyOwUe7ojUN6Tj-2UKrr3oc
 Content-Type: application/json
 
 {
   "name": "bruh123"
 }
+
+### New user registration
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "username": "newuser", "password": "password" }
+
+### New user registration (failure, no password)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "username": "newuser123"}
+
+### New user login (failure, no password)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "username": "newuser123"}
+
+### New user login (user doesnt exist)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "username": "newuser123", "password": "password"}
+
+### New user login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "username": "newuser", "password": "password"}
+
+### New user registration (for chunky lover, who owns some images)
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{ "username": "chunkylover23", "password": "password"}
+
+### New user login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{ "username": "chunkylover23", "password": "password"}
+
+
+### 4: Edit image name (using jwt and user restrictions)
+PUT http://localhost:3000/api/images/6838cb0654e089cc6a06b1be
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNodW5reWxvdmVyMjMiLCJpYXQiOjE3NDg4MzEzNTUsImV4cCI6MTc0ODkxNzc1NX0.l1IX1Y9rmlo7ooc42g327uaZ_ssHLBt1TAJW8NuCoBU
+Content-Type: application/json
+
+{
+  "name": "JWT GAMING"
+}
+

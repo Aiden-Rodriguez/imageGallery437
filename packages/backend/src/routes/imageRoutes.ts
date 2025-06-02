@@ -38,6 +38,21 @@ export function registerImageRoutes(app: express.Application, imageProvider: Ima
         return;
       }
   
+      const image = await imageProvider.getImageById(imageId);
+      if (!image) {
+        res.status(404).json({ error: "Image not found" });
+        return;
+      }
+  
+      const loggedInUser = req.user?.username;
+      if (image.authorId !== loggedInUser) {
+        res.status(403).json({
+          error: "Forbidden",
+          message: "You do not have permission to modify this image"
+        });
+        return;
+      }
+  
       const matchedCount = await imageProvider.updateImageName(imageId, newName);
   
       if (matchedCount === 0) {
@@ -50,6 +65,6 @@ export function registerImageRoutes(app: express.Application, imageProvider: Ima
       console.error("Failed to update image name:", error);
       res.status(500).json({ error: "Internal server error" });
     }
-  });  
+  });
 
 }

@@ -34,6 +34,12 @@ export class ImageProvider {
       .collection<IImageDocument>(collectionName);
   }
 
+  async getImageById(imageId: string) {
+    const db = this.mongoClient.db();
+    const image = await db.collection("images").findOne({ _id: new ObjectId(imageId) });
+    return image;
+  }
+
   async updateImageName(imageId: string, newName: string): Promise<number> {
     const result = await this.collection.updateOne(
       { _id: new ObjectId(imageId) },

@@ -1,9 +1,13 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import { ValidRoutes } from "./shared/ValidRoutes";
 import { connectMongo } from "./connectMongo";
 import { ImageProvider } from "./imageProvider";
 import { registerImageRoutes } from "./routes/imageRoutes";
+import { registerAuthRoutes } from "./routes/authRoutes";
+import { CredentialsProvider } from "./CredentialsProvider";
+import { verifyAuthToken } from "./routes/authRoutes";
+
 
 dotenv.config();
 
@@ -15,12 +19,21 @@ async function startServer() {
   await mongoClient.connect();
 
   const imageProvider = new ImageProvider(mongoClient);
-
+  const credentialsProvider  = new CredentialsProvider(mongoClient)
   const app = express();
   app.use(express.json());
   app.use(express.static(STATIC_DIR));
 
+  const JWT_SECRET = process.env.JWT_SECRET;
+
+  if (!JWT_SECRET) {
+    throw new Error("Missing JWT_SECRET in environment variables");
+  }
+  app.locals.JWT_SECRET = JWT_SECRET;
+  
+  app.use("/api/*", verifyAuthToken);
   registerImageRoutes(app, imageProvider);
+  registerAuthRoutes(app, credentialsProvider);
 
   app.get(Object.values(ValidRoutes), (req, res) => {
     res.sendFile("index.html", { root: STATIC_DIR });
