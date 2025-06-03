@@ -9,12 +9,14 @@ import { useParams } from "react-router";
 import type { IApiImageData } from "../../backend/src/common/ApiImageData.ts";
 import { ValidRoutes } from "../../backend/src/shared/ValidRoutes.ts";
 import { ImageSearchForm } from "./images/ImageSearchForm.tsx";
+import { ProtectedRoute } from "./ProtectedRoute.tsx";
 
 interface ImageDetailsWrapperProps {
   imageData: IApiImageData[];
   isError: boolean;
   isFetching: boolean;
   onNameChange: (imageId: string, newName: string) => void;
+  token: string;
 }
 
 function ImageDetailsWrapper({
@@ -22,6 +24,7 @@ function ImageDetailsWrapper({
   isError,
   isFetching,
   onNameChange,
+  token,
 }: ImageDetailsWrapperProps) {
   const { imageId } = useParams();
 
@@ -32,6 +35,7 @@ function ImageDetailsWrapper({
       isError={isError}
       isFetching={isFetching}
       onNameChange={onNameChange}
+      token={token}
     />
   );
 }
@@ -42,14 +46,19 @@ function App() {
   const [isError, setIsError] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [searchString, setSearchString] = useState("");
+  const [token, setToken] = useState("");
   const requestNumberRef = useRef(0);
-
+  // console.log(token)
   const fetchImages = async (search: string, currentRequestNumber: number) => {
     try {
       setIsFetching(true);
-      const response = await fetch(
-        `/api/images?substring=${encodeURIComponent(search)}`,
-      );
+      const response = await fetch(`/api/images?substring=${search}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -77,7 +86,7 @@ function App() {
     const currentRequestNumber = requestNumberRef.current + 1;
     requestNumberRef.current = currentRequestNumber;
     fetchImages("", currentRequestNumber);
-  }, []);
+  }, [token]);
 
   const handleNameChange = (imageId: string, newName: string) => {
     setImages((prevImages) =>
@@ -113,33 +122,53 @@ function App() {
           <Route
             path={ValidRoutes.HOME}
             element={
-              <AllImages
-                imageData={imageData}
-                isError={isError}
-                isFetching={isFetching}
-                searchPanel={
-                  <ImageSearchForm
-                    searchString={searchString}
-                    onSearchStringChange={setSearchString}
-                    onSearchRequested={handleImageSearch}
-                  />
-                }
-              />
+              <ProtectedRoute authToken={token}>
+                <AllImages
+                  imageData={imageData}
+                  isError={isError}
+                  isFetching={isFetching}
+                  searchPanel={
+                    <ImageSearchForm
+                      searchString={searchString}
+                      onSearchStringChange={setSearchString}
+                      onSearchRequested={handleImageSearch}
+                    />
+                  }
+                />
+              </ProtectedRoute>
             }
           />
-          <Route path={ValidRoutes.UPLOAD} element={<UploadPage />} />
+          <Route
+            path={ValidRoutes.UPLOAD}
+            element={
+              <ProtectedRoute authToken={token}>
+                {" "}
+                <UploadPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path={`${ValidRoutes.IMAGES}`}
             element={
-              <ImageDetailsWrapper
-                imageData={imageData}
-                isError={isError}
-                isFetching={isFetching}
-                onNameChange={handleNameChange}
-              />
+              <ProtectedRoute authToken={token}>
+                <ImageDetailsWrapper
+                  imageData={imageData}
+                  isError={isError}
+                  isFetching={isFetching}
+                  onNameChange={handleNameChange}
+                  token={token}
+                />
+              </ProtectedRoute>
             }
           />
-          <Route path={ValidRoutes.LOGIN} element={<LoginPage />} />
+          <Route
+            path={ValidRoutes.LOGIN}
+            element={<LoginPage isRegistering={false} setToken={setToken} />}
+          />
+          <Route
+            path={ValidRoutes.REGISTER}
+            element={<LoginPage isRegistering={true} setToken={setToken} />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

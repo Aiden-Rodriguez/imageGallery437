@@ -8,25 +8,24 @@ interface IAuthTokenPayload {
 
 declare module "express-serve-static-core" {
     interface Request {
-        user?: IAuthTokenPayload // Let TS know what type req.user should be
+        user?: IAuthTokenPayload
     }
 }
 
 export function verifyAuthToken(
     req: Request,
     res: Response,
-    next: NextFunction // Call next() to run the next middleware or request handler
+    next: NextFunction
 ) {
     const authHeader = req.get("Authorization");
-    // The header should say "Bearer <token string>".  Discard the Bearer part.
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
         res.status(401).end();
-    } else { // JWT_SECRET should be read in index.ts and stored in app.locals
+    } else {
         jwt.verify(token, req.app.locals.JWT_SECRET as string, (error, decoded) => {
             if (decoded) {
-                req.user = decoded as IAuthTokenPayload; // Modify the request for subsequent handlers
+                req.user = decoded as IAuthTokenPayload;
                 next();
             } else {
                 res.status(403).end();
@@ -75,7 +74,9 @@ export function registerAuthRoutes(app: express.Application, credentialsProvider
         return;
       }
 
-      res.status(201).send();
+      const jwtSecret = req.app.locals.JWT_SECRET;
+      const token = await generateAuthToken(username, jwtSecret);
+      res.status(201).json({ token });
     } catch (error) {
       console.error("Failed to register:", error);
       res.status(500).json({ error: "Internal server error" });

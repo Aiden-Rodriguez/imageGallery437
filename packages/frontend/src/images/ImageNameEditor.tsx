@@ -4,12 +4,14 @@ interface INameEditorProps {
   initialValue: string;
   imageId: string;
   onNameChange: (imageId: string, newName: string) => void;
+  token: string;
 }
 
 export function ImageNameEditor({
   initialValue,
   imageId,
   onNameChange,
+  token,
 }: INameEditorProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [input, setInput] = useState(initialValue);
@@ -21,15 +23,37 @@ export function ImageNameEditor({
     setError(null);
 
     try {
-      const response = await fetch("/api/images");
+      const response = await fetch(`/api/images/${imageId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: input }),
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 403) {
+          setError(
+            "You are not the original uploader of this image, so you cannot rename it.",
+          );
+        } else if (response.status === 422) {
+          setError("Inputted name must not be more than 100 characters.");
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return;
       }
+
       onNameChange(imageId, input);
       setIsEditingName(false);
-    } catch (error) {
-      setError("Failed to update image name. Please try again.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError("Failed to update image name. Please try again.");
+        console.error(error.message);
+      } else {
+        setError("An unknown error occurred.");
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -26,8 +26,8 @@ export class CredentialsProvider {
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(plaintextPassword, salt);
 
-        console.log("Salt:", salt);
-        console.log("Hash:", hash);
+        // console.log("Salt:", salt);
+        // console.log("Hash:", hash);
         await this.collection.insertOne({ username, password: hash });
 
         return true;

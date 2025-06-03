@@ -7,6 +7,7 @@ interface IImageDetailsProps {
   isError: boolean;
   isFetching: boolean;
   onNameChange: (imageId: string, newName: string) => void;
+  token: string;
 }
 
 export function ImageDetails({
@@ -15,6 +16,7 @@ export function ImageDetails({
   isError,
   isFetching,
   onNameChange,
+  token,
 }: IImageDetailsProps) {
   if (isError) {
     return <p style={{ color: "red" }}>Failed to fetch images.</p>;
@@ -42,6 +44,7 @@ export function ImageDetails({
         initialValue={image.name}
         imageId={imageId}
         onNameChange={onNameChange}
+        token={token}
       />
       <img className="ImageDetails-img" src={image.src} alt={image.name} />
     </div>
