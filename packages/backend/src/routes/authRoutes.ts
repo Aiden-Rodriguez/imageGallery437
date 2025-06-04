@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import { CredentialsProvider } from "../CredentialsProvider";
+import { UserProvider } from "../userProvider";
 import jwt from "jsonwebtoken";
 
 interface IAuthTokenPayload {
@@ -51,7 +52,11 @@ function generateAuthToken(username: string, jwtSecret: string): Promise<string>
     });
 }
 
-export function registerAuthRoutes(app: express.Application, credentialsProvider: CredentialsProvider) {
+export function registerAuthRoutes(
+  app: express.Application, 
+  credentialsProvider: CredentialsProvider,
+  userProvider: UserProvider
+) {
   app.post("/auth/register", async (req: Request, res: Response): Promise<void> => {
     try {
       const { username, password } = req.body;
@@ -64,12 +69,22 @@ export function registerAuthRoutes(app: express.Application, credentialsProvider
         return;
       }
 
-      const success = await credentialsProvider.registerUser(username, password);
-
-      if (!success) {
+      const userCreated = await userProvider.createUser(username);
+      if (!userCreated) {
         res.status(409).json({
           error: "Username already taken",
           message: "A user with this username already exists",
+        });
+        return;
+      }
+
+
+      const credentialsCreated = await credentialsProvider.registerUser(username, password);
+      if (!credentialsCreated) {
+
+        res.status(500).json({
+          error: "Internal server error",
+          message: "Failed to create user credentials",
         });
         return;
       }

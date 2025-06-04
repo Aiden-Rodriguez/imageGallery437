@@ -6,6 +6,7 @@ import { ImageProvider } from "./imageProvider";
 import { registerImageRoutes } from "./routes/imageRoutes";
 import { registerAuthRoutes } from "./routes/authRoutes";
 import { CredentialsProvider } from "./CredentialsProvider";
+import { UserProvider } from "./userProvider";
 import { verifyAuthToken } from "./routes/authRoutes";
 
 
@@ -20,10 +21,11 @@ async function startServer() {
 
   const imageProvider = new ImageProvider(mongoClient);
   const credentialsProvider  = new CredentialsProvider(mongoClient)
+  const usersProvider  = new UserProvider(mongoClient)
   const app = express();
   app.use(express.json());
   app.use(express.static(STATIC_DIR));
-
+  app.use("/uploads", express.static("uploads"));
   const JWT_SECRET = process.env.JWT_SECRET;
 
   if (!JWT_SECRET) {
@@ -33,7 +35,7 @@ async function startServer() {
   
   app.use("/api/*", verifyAuthToken);
   registerImageRoutes(app, imageProvider);
-  registerAuthRoutes(app, credentialsProvider);
+  registerAuthRoutes(app, credentialsProvider, usersProvider);
 
   app.get(Object.values(ValidRoutes), (req, res) => {
     res.sendFile("index.html", { root: STATIC_DIR });

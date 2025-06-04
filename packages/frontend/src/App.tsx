@@ -49,6 +49,12 @@ function App() {
   const [token, setToken] = useState("");
   const requestNumberRef = useRef(0);
   // console.log(token)
+  const refetchImages = () => {
+    const currentRequestNumber = requestNumberRef.current + 1;
+    requestNumberRef.current = currentRequestNumber;
+    fetchImages("", currentRequestNumber);
+  };
+  
   const fetchImages = async (search: string, currentRequestNumber: number) => {
     try {
       setIsFetching(true);
@@ -143,7 +149,7 @@ function App() {
             element={
               <ProtectedRoute authToken={token}>
                 {" "}
-                <UploadPage />
+                <UploadPage token={token} refetchImages={refetchImages}/>
               </ProtectedRoute>
             }
           />

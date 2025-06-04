@@ -48,7 +48,7 @@ export class ImageProvider {
     return result.matchedCount;
   }
 
-  async getImages(nameFilter?: string): Promise<IDenormalizedImage[]> {
+  async getImages(nameFilter?: string, authorId?: string): Promise<IDenormalizedImage[]> {
     const trimmed = nameFilter?.trim();
     const escapedFilter = trimmed
       ? trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -56,14 +56,21 @@ export class ImageProvider {
 
     const pipeline: object[] = [];
 
-    // Add name filter if provided
     if (escapedFilter) {
       pipeline.push({
         $match: {
           name: {
             $regex: escapedFilter,
-            $options: "i", // case-insensitive
+            $options: "i",
           },
+        },
+      });
+    }
+
+    if (authorId) {
+      pipeline.push({
+        $match: {
+          authorId: authorId,
         },
       });
     }
@@ -88,24 +95,54 @@ export class ImageProvider {
           as: "author",
         },
       },
-      { $unwind: "$author" },
+      { $unwind: { path: "$author", preserveNullAndEmptyArrays: true } },
+      {
+        $set: {
+          author: {
+            $cond: {
+              if: { $eq: ["$author", {}] },
+              then: {
+                id: "$authorId",
+                username: "Unknown User",
+                email: "unknown@example.com",
+              },
+              else: {
+                id: { $toString: "$author._id" },
+                username: "$author.username",
+                email: "$author.email",
+              },
+            },
+          },
+        },
+      },
       {
         $project: {
           _id: 0,
           id: { $toString: "$_id" },
           src: 1,
           name: 1,
-          author: {
-            id: { $toString: "$author._id" },
-            username: "$author.username",
-            email: "$author.email",
-          },
+          author: 1,
         },
       }
     );
 
-    
     const results = await this.collection.aggregate(pipeline).toArray();
     return results as IDenormalizedImage[];
+  }
+
+  async createImage(data: {
+    name: string;
+    authorId: string;
+    src: string;
+  }): Promise<void> {
+    const result = await this.collection.insertOne({
+      _id: new ObjectId(),
+      name: data.name,
+      authorId: data.authorId,
+      src: data.src,
+    });
+    if (!result.acknowledged) {
+      throw new Error("Failed to insert image document");
+    }
   }
 }

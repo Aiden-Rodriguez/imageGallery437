@@ -76,3 +76,8 @@ Content-Type: application/json
   "name": "JWT GAMING"
 }
 
+### get image thats uploaded??
+ GET http://localhost:5173/uploads/1749008654609-27611391.png
+ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImEiLCJpYXQiOjE3NDkwMDc3NjksImV4cCI6MTc0OTA5NDE2OX0.4ppXFcmRVeuw3JLPJF7qeEL0tB8YAplNgSDr0vfeY70
+
+###
